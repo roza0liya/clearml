@@ -19,8 +19,11 @@ def clearml_task(project_name, task_name=None, tags=None):
                 tags=tags or []
             )
             
+            # Преобразование *args в словарь
+            args_dict = {f'arg_{i}': arg for i, arg in enumerate(args)}
+
             # Подключение аргументов к задаче
-            task.connect(args)
+            task.connect(args_dict)
             task.connect(kwargs)
 
             try:
@@ -32,15 +35,13 @@ def clearml_task(project_name, task_name=None, tags=None):
                     iteration=0
                 )
 
-                # Загрузка артефактов
                 task.upload_artifact(name='processed_data', artifact_object=result)
-                
-                # Пример логирования графика
+
                 fig, ax = plt.subplots()
-                ax.plot(np.random.rand(10))
+                ax.plot(result['score'])  # Использование значений из колонки 'score'
                 task.get_logger().report_matplotlib_figure(
-                    title='Random Plot', 
-                    series='Test Series', 
+                    title='Data Plot', 
+                    series='Dataset', 
                     figure=fig
                 )
 
@@ -64,8 +65,7 @@ def clearml_task(project_name, task_name=None, tags=None):
     task_name="Data_Processing",
     tags=["preprocessing", "v1"]
 )
-def process_data(input_file, threshold=0.5):
-    # Ваш код обработки данных
+def process_data(input_file, threshold=0.7, *args, **kwargs):
     data = load_data(input_file)
     processed_data = data[data['score'] > threshold]
     return processed_data
